@@ -1,12 +1,9 @@
-import torch
 import torch.nn as nn
 import math
-import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
-
 
 class WisePooling(Module):
 
@@ -26,13 +23,24 @@ class WisePooling(Module):
 
         return torch.stack(batch_list, dim=0).requires_grad_(True)
 
+class WiseConvolution(Module):
 
-import torch.nn as nn
-import math
-import torch
-import torch.nn.functional as F
-from torch.nn.parameter import Parameter
-from torch.nn.modules.module import Module
+    def __init__(self, input_size, output_size):
+        super(WiseConvolution, self).__init__()
+        self.WiseConv = nn.Linear(input_size, output_size)
+
+    def forward(self, input, graph):
+        batch_list = []
+        for i in range(input.shape[0]):
+            tensor_list = list()
+            for j in range(graph[i].shape[0]):
+                shot_boundary = graph[i][j]
+
+                tensor_list.append(torch.sum(self.WiseConv(input[i][shot_boundary[0]:shot_boundary[1] + 1]), dim=0).requires_grad_(True))
+            batch_list.append(torch.stack(tensor_list, dim=0).requires_grad_(True))
+
+        return torch.stack(batch_list, dim=0).requires_grad_(True)
+
 
 class NodeConvolution(Module):
 
